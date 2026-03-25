@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Jewels Lead Radar",
+  "version": "1.0",
+  "description": "Automated LinkedIn Extraction and Email Discovery",
+  "permissions": ["tabs", "scripting", "storage"],
+  "host_permissions": [
+    "*://*.linkedin.com/*",
+    "https://api.hunter.io/*"
+  ],
+  "action": {
+    "default_title": "Open Jewels Lead Radar"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
