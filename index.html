@@ -3,20 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jewels Lead Radar</title>
+    <title>Jewels Lead Radar - Automated LinkedIn Email Finder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             theme: {
-                extend: { colors: { navy: '#0A192F', gold: '#D4AF37', accent: '#8B5CF6' } }
+                extend: {
+                    colors: {
+                        navy: '#0A192F',
+                        gold: '#D4AF37',
+                        'navy-light': '#1a2f4a',
+                        'gold-light': '#e3c14e',
+                        accent: '#8B5CF6' 
+                    }
+                }
             }
         }
     </script>
     <style>
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #0A192F; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; display: none;}
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .email-row:hover { border-color: #D4AF37; }
+        .btn-transition { transition: all 0.2s ease-in-out; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #0A192F;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #D4AF37;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
@@ -26,88 +63,155 @@
             <div>
                 <h1 class="text-2xl font-bold tracking-wide flex items-center">
                     <i class="fas fa-radar text-gold mr-3"></i>
-                    <span>JEWELS LEAD RADAR <span class="text-[10px] bg-green-500 px-2 py-0.5 rounded ml-2 uppercase">Zero-Cost Edition</span></span>
+                    <span>JEWELS LEAD RADAR <span class="text-[10px] bg-green-500 px-2 py-0.5 rounded ml-2 uppercase">Native Background Engine</span></span>
                 </h1>
+                <p class="text-gray-300 text-sm mt-1"><i class="fas fa-robot mr-1"></i>Auto Scan • <i class="fas fa-envelope mr-1"></i>Smart Email Finder • <i class="fas fa-check-circle mr-1"></i>Auto Verification</p>
             </div>
             <div class="flex items-center space-x-4">
-                <button onclick="clearAll()" class="text-sm text-gray-300 hover:text-white transition"><i class="fas fa-eraser mr-1"></i>Clear Board</button>
+                <button onclick="clearAll()" class="text-sm text-gray-300 hover:text-white mr-4 transition"><i class="fas fa-eraser mr-1"></i>Clear All</button>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto mt-8 px-6 pb-12 grid grid-cols-1 md:grid-cols-12 gap-8">
+    <main class="max-w-7xl mx-auto mt-8 px-6 pb-12">
         
-        <div class="md:col-span-5 space-y-6">
-            
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 class="text-lg font-bold text-navy mb-4"><i class="fas fa-building mr-2"></i>Target Identification</h2>
-                <div class="space-y-4">
-                    <input type="text" id="companyInput" placeholder="Company Name (e.g. NCR)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState(); updateDashboard();">
-                    <input type="text" id="domainInput" placeholder="Domain (e.g. ncr.com)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState(); updateDashboard();">
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-navy">
+                <p class="text-xs text-gray-500 uppercase">Target Company</p>
+                <p class="text-lg font-bold text-navy truncate" id="statCompany">Not set</p>
             </div>
-
-            <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-l-blue-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-navy"><i class="fas fa-users text-blue-500 mr-2"></i>Prospect Queue</h2>
-                    <button onclick="extractFromLinkedIn()" id="extractBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded transition flex items-center shadow-md">
-                        <i class="fab fa-linkedin mr-2"></i>Auto-Extract
-                    </button>
-                </div>
-                
-                <div id="parsedNamesList" class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                    <div class="text-center py-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
-                        <i class="fas fa-satellite-dish text-3xl mb-2 opacity-50"></i>
-                        <p class="text-sm">Run a LinkedIn search, then click Auto-Extract.</p>
-                    </div>
-                </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-gold">
+                <p class="text-xs text-gray-500 uppercase">Domain</p>
+                <p class="text-lg font-bold text-navy truncate" id="statDomain">Not set</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                <p class="text-xs text-gray-500 uppercase">Profiles Found</p>
+                <p class="text-lg font-bold text-navy" id="statProfiles">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                <p class="text-xs text-gray-500 uppercase">Valid Emails</p>
+                <p class="text-lg font-bold text-navy" id="statValid">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
+                <p class="text-xs text-gray-500 uppercase">Active Prospect</p>
+                <p class="text-lg font-bold text-navy truncate" id="statName">None</p>
             </div>
         </div>
 
-        <div class="md:col-span-7 space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-gold">
-                <div class="flex justify-between items-center mb-4 border-b pb-3">
-                    <div>
-                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-bullseye mr-2 text-gold"></i>Local Probability Engine</h2>
-                        <p class="text-xs text-gray-500 mt-1" id="activeTargetDisplay">Select a prospect to generate emails.</p>
-                    </div>
-                    <button onclick="pingDomain()" id="pingBtn" class="bg-navy hover:bg-navy-light text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm flex items-center transition opacity-50 cursor-not-allowed" disabled>
-                        <i class="fas fa-server mr-2"></i>Ping Mail Server
-                    </button>
-                </div>
+            <div class="lg:col-span-4 space-y-6">
                 
-                <div id="emailList" class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
-                    <div class="text-center text-gray-400 py-6">
-                        <i class="fas fa-fingerprint text-4xl mb-3 opacity-30"></i>
-                        <p class="text-sm">Awaiting prospect and domain data...</p>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h2 class="text-lg font-bold text-navy mb-4 flex items-center">
+                        <i class="fas fa-building text-gold mr-2"></i>Company Details
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Company Name</label>
+                            <input type="text" id="companyInput" placeholder="e.g. NCR Corporation" class="w-full border-2 border-gray-200 rounded-lg p-3 focus:border-gold focus:outline-none" value="" oninput="saveState(); updateStats();">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Company Domain</label>
+                            <div class="flex">
+                                <span class="inline-flex items-center px-3 bg-gray-100 border-2 border-r-0 border-gray-200 rounded-l-lg">@</span>
+                                <input type="text" id="domainInput" placeholder="ncr.com" class="w-full border-2 border-gray-200 rounded-r-lg p-3 focus:border-gold focus:outline-none" value="" oninput="saveState(); updateStats();">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h2 class="text-lg font-bold text-navy mb-4 flex items-center">
+                        <i class="fas fa-bolt text-gold mr-2"></i>Target Roles
+                    </h2>
+                    <div class="mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Gatekeeper Roles</h3>
+                        <div class="space-y-2" id="jobTitlesList"></div>
+                    </div>
+                    <div class="border-t pt-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Decision Makers</h3>
+                        <div class="grid grid-cols-2 gap-2" id="decisionMakerList"></div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-navy to-navy-light p-6 rounded-lg shadow-lg">
+                    <button id="scanBtn" onclick="autoScanLinkedIn()" class="w-full bg-gold text-navy font-bold py-4 rounded-lg hover:bg-gold-light transition-all text-lg flex items-center justify-center gap-2">
+                        <i class="fas fa-robot"></i>
+                        <span>🤖 AUTO SCAN LINKEDIN</span>
+                    </button>
+                    <p class="text-gray-300 text-xs text-center mt-3">
+                        <i class="fas fa-shield-alt mr-1"></i> Native Extension Fetch (No Proxies Required)
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h2 class="text-lg font-bold text-navy mb-2 flex items-center">
+                        <i class="fas fa-users text-blue-500 mr-2"></i>Prospect Queue
+                        <span class="ml-auto text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded" id="queueCount">0</span>
+                    </h2>
+                    <div id="parsedNamesList" class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                        <div class="text-center py-6 text-gray-400">
+                            <i class="fas fa-users text-3xl mb-2 opacity-50"></i>
+                            <p class="text-sm">Queue is empty. Click "Auto Scan LinkedIn" to find prospects!</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-accent">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b">
-                    <div>
-                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-pen mr-2 text-accent"></i>Dynamic Pitch Engine</h2>
+            <div class="lg:col-span-8 space-y-6">
+                
+                <div id="scanProgress" class="hidden bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-navy"><i class="fas fa-spinner fa-spin mr-2"></i>Scanning LinkedIn...</h3>
+                        <span id="scanStatusText" class="text-sm text-gray-500">Searching profiles</span>
                     </div>
-                    <div class="mt-3 md:mt-0 flex gap-2">
-                        <button onclick="spinSubject()" class="border-2 border-gold text-gold hover:bg-gold hover:text-navy rounded-lg p-2 text-sm font-bold transition">
-                            <i class="fas fa-sync-alt mr-1"></i>Spin
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="scanProgressBar" class="bg-gold h-2 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <p id="scanDetails" class="text-xs text-gray-500 mt-2"></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="flex justify-between items-center mb-4 border-b pb-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-navy"><i class="fas fa-envelope mr-2 text-gold"></i>Auto Email Finder</h2>
+                        </div>
+                        <button onclick="exportAllEmails()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+                            <i class="fas fa-download mr-2"></i>Export CSV
                         </button>
-                        <select id="emailClientPref" class="bg-white border border-gray-300 rounded text-sm font-semibold p-2 focus:border-accent">
-                            <option value="mailto">Desktop Client</option>
+                    </div>
+                    <div id="emailResults" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="fas fa-search text-5xl mb-3 opacity-30"></i>
+                            <p class="text-lg">Select a prospect from the queue to generate emails</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-pen mr-2 text-accent"></i>Smart Pitch Generator</h2>
+                        <select id="emailClientPref" class="border rounded-lg p-1 text-sm">
+                            <option value="mailto">Desktop App</option>
                             <option value="gmail">Gmail</option>
                             <option value="outlook">Outlook</option>
                         </select>
                     </div>
-                </div>
-                
-                <textarea id="pitchOutput" rows="8" class="w-full border-2 border-gray-200 rounded-lg p-4 text-sm font-sans text-gray-800 focus:border-accent focus:outline-none resize-y bg-gray-50 leading-relaxed" readonly placeholder="Awaiting prospect data..."></textarea>
-                
-                <div class="mt-4 flex gap-4">
-                    <button onclick="copyPitch()" id="copyPitchBtn" disabled class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition opacity-50 cursor-not-allowed">
-                        <i class="fas fa-copy mr-2"></i>Copy Pitch
-                    </button>
+                    <div class="flex gap-2 mb-4">
+                        <button onclick="spinSubject()" class="border border-gold text-gold px-3 py-1 rounded text-sm hover:bg-gold hover:text-navy transition">
+                            <i class="fas fa-sync-alt mr-1"></i>Spin Subject
+                        </button>
+                        <select id="pitchType" class="border rounded p-1 text-sm flex-1" onchange="generatePitch()">
+                            <option value="direct">Direct Pitch</option>
+                            <option value="trojan">Gatekeeper Pitch</option>
+                        </select>
+                    </div>
+                    <textarea id="pitchOutput" rows="10" class="w-full border-2 rounded-lg p-4 text-sm bg-gray-50" readonly placeholder="Select a prospect to generate pitch..."></textarea>
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="copyPitch()" id="copyPitchBtn" disabled class="flex-1 bg-accent hover:bg-purple-600 text-white py-2 rounded transition opacity-50 cursor-not-allowed">Copy Pitch</button>
+                        <button onclick="sendEmailNow()" id="sendEmailBtn" disabled class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition opacity-50 cursor-not-allowed">Send Email</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,232 +220,455 @@
     <div id="toast" class="toast"><i class="fas fa-info-circle mr-2"></i><span id="toastMsg"></span></div>
 
     <script>
-        let activeTarget = { first: "", last: "", full: "" };
-        let prospectQueue = [];
+        const jobTitles = [
+            { title: "Office Manager", selected: true },
+            { title: "Facilities Manager", selected: true },
+            { title: "Executive Assistant", selected: true },
+            { title: "Travel Coordinator", selected: true },
+            { title: "Operations Manager", selected: false }
+        ];
+
+        const decisionMakers = [
+            { title: "Director", selected: true },
+            { title: "CEO", selected: true },
+            { title: "VP", selected: true },
+            { title: "Head of", selected: true },
+            { title: "Managing Director", selected: false }
+        ];
+
         let currentSubjectIndex = 0;
+        let activeTarget = { first: "", last: "", full: "" };
+        let prospects = [];
 
         window.onload = function() {
-            const savedCompany = localStorage.getItem('target_company');
-            const savedDomain = localStorage.getItem('target_domain');
-            if(savedCompany) document.getElementById('companyInput').value = savedCompany;
-            if(savedDomain) document.getElementById('domainInput').value = savedDomain;
-
-            const savedQueue = localStorage.getItem('prospect_queue');
-            if(savedQueue) {
-                prospectQueue = JSON.parse(savedQueue);
-                renderQueue();
-            }
+            loadState();
+            renderJobTitles();
+            renderDecisionMakers();
+            updateStats();
         };
 
-        function showToast(msg) {
-            document.getElementById('toastMsg').innerText = msg;
+        function showToast(message, isSuccess = true) {
+            document.getElementById('toastMsg').innerText = message;
             const toast = document.getElementById('toast');
             toast.style.display = 'block';
             setTimeout(() => toast.style.display = 'none', 3000);
         }
 
-        function clearAll() {
-            document.getElementById('companyInput').value = '';
-            document.getElementById('domainInput').value = '';
-            prospectQueue = [];
-            activeTarget = { first: "", last: "", full: "" };
-            localStorage.removeItem('prospect_queue');
-            saveState();
-            renderQueue();
-            updateDashboard();
-            showToast("Board Cleared");
-        }
-
         function saveState() {
-            localStorage.setItem('target_company', document.getElementById('companyInput').value);
-            localStorage.setItem('target_domain', document.getElementById('domainInput').value);
-            generatePitch();
+            const state = {
+                company: document.getElementById('companyInput').value,
+                domain: document.getElementById('domainInput').value,
+                prospects: prospects,
+                activeTarget: activeTarget
+            };
+            localStorage.setItem('jewelsHunterPro', JSON.stringify(state));
         }
 
-        // --- LINKEDIN EXTRACTION ---
-        function extractFromLinkedIn() {
-            const btn = document.getElementById('extractBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Extracting...';
-
-            chrome.tabs.query({url: "*://*.linkedin.com/*"}, function(tabs) {
-                if(tabs.length === 0) {
-                    showToast("No LinkedIn tabs found! Open a search first.");
-                    btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract';
-                    return;
-                }
-
-                const targetTab = tabs[0];
-                chrome.scripting.executeScript({
-                    target: {tabId: targetTab.id},
-                    files: ['content.js']
-                }, () => {
-                    chrome.tabs.sendMessage(targetTab.id, {action: "scrape_linkedin"}, function(response) {
-                        btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract';
-                        
-                        if(response && response.success && response.data.length > 0) {
-                            prospectQueue = response.data;
-                            localStorage.setItem('prospect_queue', JSON.stringify(prospectQueue));
-                            renderQueue();
-                            showToast(`Extracted ${response.data.length} prospects!`);
-                        } else {
-                            showToast("No names found. Ensure search results are loaded.");
-                        }
-                    });
-                });
-            });
+        function loadState() {
+            const saved = localStorage.getItem('jewelsHunterPro');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    document.getElementById('companyInput').value = state.company || '';
+                    document.getElementById('domainInput').value = state.domain || '';
+                    prospects = state.prospects || [];
+                    activeTarget = state.activeTarget || { first: "", last: "", full: "" };
+                    renderQueue();
+                    if(activeTarget.full) generateEmailsForActive();
+                } catch(e) {}
+            }
         }
 
-        function renderQueue() {
-            const container = document.getElementById('parsedNamesList');
-            if(prospectQueue.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg"><p class="text-sm">Queue is empty</p></div>`;
+        function clearAll() {
+            if (confirm('Clear all data?')) {
+                prospects = [];
+                activeTarget = { first: "", last: "", full: "" };
+                localStorage.removeItem('jewelsHunterPro');
+                document.getElementById('companyInput').value = '';
+                document.getElementById('domainInput').value = '';
+                renderQueue();
+                updateStats();
+                document.getElementById('emailResults').innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fas fa-search text-5xl mb-3 opacity-30"></i><p>Select a prospect from the queue</p></div>';
+                document.getElementById('pitchOutput').value = '';
+                showToast('All data cleared');
+            }
+        }
+
+        function renderJobTitles() {
+            const container = document.getElementById('jobTitlesList');
+            container.innerHTML = jobTitles.map((job) => `
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" value="${job.title}" ${job.selected ? 'checked' : ''} class="role-checkbox">
+                    <span class="text-sm">${job.title}</span>
+                </label>
+            `).join('');
+        }
+
+        function renderDecisionMakers() {
+            const container = document.getElementById('decisionMakerList');
+            container.innerHTML = decisionMakers.map((job) => `
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" value="${job.title}" ${job.selected ? 'checked' : ''} class="role-checkbox">
+                    <span class="text-sm">${job.title}</span>
+                </label>
+            `).join('');
+        }
+
+        function getSelectedRoles() {
+            return Array.from(document.querySelectorAll('.role-checkbox:checked')).map(cb => cb.value);
+        }
+
+        // ============ NEW NATIVE BACKGROUND SCRAPER ============
+        async function autoScanLinkedIn() {
+            const company = document.getElementById('companyInput').value.trim();
+            const roles = getSelectedRoles();
+            
+            if (!company) {
+                showToast('Please enter a company name', false);
                 return;
             }
-
-            container.innerHTML = prospectQueue.map(name => {
-                const isSelected = activeTarget.full === name;
-                return `
-                    <div class="p-3 rounded border transition flex justify-between items-center cursor-pointer ${isSelected ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-50 border-gray-200 hover:border-blue-300 text-navy'}" onclick="selectProspect('${name.replace(/'/g, "\\'")}')">
-                        <div class="font-bold text-sm">${name}</div>
-                        ${isSelected ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-chevron-right text-xs"></i>'}
-                    </div>`;
-            }).join('');
-        }
-
-        function selectProspect(fullName) {
-            activeTarget.full = fullName;
-            const parts = fullName.split(' ').filter(p => p.trim() !== '');
-            activeTarget.first = parts[0] || '';
-            activeTarget.last = parts.slice(1).join(' ') || '';
             
-            document.getElementById('activeTargetDisplay').innerHTML = `Target: <strong>${fullName}</strong>`;
+            const scanBtn = document.getElementById('scanBtn');
+            const progressDiv = document.getElementById('scanProgress');
+            const progressBar = document.getElementById('scanProgressBar');
+            const scanStatus = document.getElementById('scanStatusText');
+            const scanDetails = document.getElementById('scanDetails');
             
-            renderQueue();
-            updateDashboard();
-        }
-
-        // --- LOCAL GENERATOR & DNS CHECK (FREE) ---
-        function updateDashboard() {
-            const domain = document.getElementById('domainInput').value.trim().toLowerCase().replace('@', '');
-            const first = activeTarget.first.toLowerCase();
-            const last = activeTarget.last.toLowerCase();
-            const emailList = document.getElementById('emailList');
-            const pingBtn = document.getElementById('pingBtn');
-
-            if (first && last && domain) {
-                pingBtn.disabled = false;
-                pingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-                const perms = [
-                    { format: "Standard Corporate", email: `${first}.${last}@${domain}` },
-                    { format: "Initial + Last", email: `${first.charAt(0)}${last}@${domain}` },
-                    { format: "First Only", email: `${first}@${domain}` },
-                    { format: "First + Last", email: `${first}${last}@${domain}` }
-                ];
-
-                let html = perms.map(item => `
-                    <div class="email-row flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 transition mb-2 shadow-sm">
-                        <div class="flex flex-col">
-                            <span class="font-mono text-navy font-bold text-sm">${item.email}</span>
-                            <span class="text-[10px] text-gray-500 font-bold tracking-wider">${item.format}</span>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="navigator.clipboard.writeText('${item.email}'); showToast('Copied!')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1.5 px-3 rounded text-xs transition">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                            <button onclick="sendSpecific('${item.email}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded text-xs transition">
-                                <i class="fas fa-paper-plane mr-1"></i>Email
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-
-                // Add Trojan / Gatekeeper Emails
-                html += `
-                <div class="mt-4 pt-3 border-t border-gray-200">
-                    <p class="text-xs font-bold text-gray-500 uppercase mb-2"><i class="fas fa-door-open mr-1"></i>Gatekeeper / General Inboxes</p>
-                    ${['info', 'office', 'hello'].map(prefix => `
-                        <div class="email-row flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100 mb-1">
-                            <span class="font-mono text-navy font-bold text-sm">${prefix}@${domain}</span>
-                            <button onclick="sendSpecific('${prefix}@${domain}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold"><i class="fas fa-paper-plane"></i></button>
-                        </div>
-                    `).join('')}
-                </div>`;
-
-                emailList.innerHTML = html;
-            } else {
-                pingBtn.disabled = true;
-                pingBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                emailList.innerHTML = `<div class="text-center py-6 text-gray-400"><p class="text-sm">Awaiting prospect name and domain...</p></div>`;
-            }
-        }
-
-        async function pingDomain() {
-            const domain = document.getElementById('domainInput').value.trim();
-            const btn = document.getElementById('pingBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Pinging...';
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Scanning natively...';
+            progressDiv.classList.remove('hidden');
             
             try {
-                // Free Google DNS API to check if Mail Exchange (MX) records exist
-                const response = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`);
-                const data = await response.json();
+                const rolesQuery = roles.length > 0 ? roles.slice(0, 5).join(' OR ') : 'professional';
+                const searchQuery = `site:linkedin.com/in/ (${rolesQuery}) "${company}"`;
+                
+                scanStatus.textContent = 'Pinging Google silently...';
+                progressBar.style.width = '30%';
+                
+                const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+                
+                // TALK TO THE EXTENSION BACKGROUND WORKER
+                const response = await new Promise((resolve) => {
+                    chrome.runtime.sendMessage({ action: "native_search", url: searchUrl }, resolve);
+                });
 
-                if (data.Answer && data.Answer.length > 0) {
-                    btn.classList.replace('bg-navy', 'bg-green-500');
-                    btn.classList.replace('hover:bg-navy-light', 'hover:bg-green-600');
-                    btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Server Active';
-                    showToast(`The mail server for ${domain} is live and accepting mail.`);
-                } else {
-                    btn.classList.replace('bg-navy', 'bg-red-500');
-                    btn.classList.replace('hover:bg-navy-light', 'hover:bg-red-600');
-                    btn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Server Dead';
-                    showToast(`Warning: No mail server found for ${domain}.`, false);
+                if (!response || !response.success) {
+                    throw new Error(response ? response.error : "Background worker failed.");
                 }
-            } catch (error) {
-                btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error';
-            }
 
-            setTimeout(() => {
-                btn.className = "bg-navy hover:bg-navy-light text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm flex items-center transition";
-                btn.innerHTML = '<i class="fas fa-server mr-2"></i>Ping Mail Server';
-            }, 4000);
+                const html = response.html;
+                
+                scanStatus.textContent = 'Extracting names...';
+                progressBar.style.width = '60%';
+                
+                const names = new Set();
+                
+                // Regex parsing from the raw HTML string
+                const titleRegex = /<h3[^>]*>(.*?)<\/h3>/gi;
+                let match;
+                while ((match = titleRegex.exec(html)) !== null) {
+                    let text = match[1].replace(/<[^>]*>/g, '').trim();
+                    if (text.match(/^[A-Z][a-z]+ [A-Z][a-z]+/) && text.length < 40) names.add(text);
+                }
+                
+                const divRegex = /<div[^>]*class="[^"]*BNeawe[^"]*"[^>]*>(.*?)<\/div>/gi;
+                while ((match = divRegex.exec(html)) !== null) {
+                    let text = match[1].replace(/<[^>]*>/g, '').trim();
+                    if (text.match(/^[A-Z][a-z]+ [A-Z][a-z]+/) && text.length < 40 && !text.includes('LinkedIn')) names.add(text);
+                }
+                
+                const extractedNames = Array.from(names).slice(0, 30);
+                
+                scanStatus.textContent = `Found ${extractedNames.length} profiles`;
+                progressBar.style.width = '90%';
+                scanDetails.textContent = 'Adding to queue...';
+                
+                for (const name of extractedNames) {
+                    if (!prospects.some(p => p.name === name)) {
+                        prospects.push({
+                            id: Date.now() + Math.random(),
+                            name: name,
+                            title: 'Professional',
+                            date: new Date().toISOString()
+                        });
+                    }
+                }
+                
+                renderQueue();
+                updateStats();
+                saveState();
+                
+                progressBar.style.width = '100%';
+                scanStatus.textContent = 'Complete!';
+                
+                setTimeout(() => {
+                    progressDiv.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                }, 2000);
+                
+                showToast(`✅ Found ${extractedNames.length} professionals securely!`);
+                
+                if (prospects.length > 0 && !activeTarget.full) selectProspect(prospects[0].id);
+                
+            } catch (error) {
+                console.error('Scan error:', error);
+                showToast('Native scan failed. Please check connection.', false);
+                progressDiv.classList.add('hidden');
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '<i class="fas fa-robot mr-2"></i>🤖 AUTO SCAN LINKEDIN';
+            }
+        }
+        
+        function renderQueue() {
+            const container = document.getElementById('parsedNamesList');
+            const queueCount = document.getElementById('queueCount');
+            
+            if (prospects.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-gray-400"><i class="fas fa-users text-3xl mb-2 opacity-50"></i><p class="text-sm">Queue is empty. Click "Auto Scan LinkedIn" to find prospects!</p></div>`;
+                queueCount.textContent = '0';
+                return;
+            }
+            
+            queueCount.textContent = prospects.length;
+            
+            container.innerHTML = prospects.map(prospect => `
+                <div class="p-3 rounded-lg border transition flex justify-between items-center ${activeTarget.id === prospect.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 border-gray-200 hover:border-blue-300'}" onclick="selectProspect(${prospect.id})">
+                    <div class="flex-1">
+                        <div class="font-bold text-sm">${prospect.name}</div>
+                        <div class="text-xs ${activeTarget.id === prospect.id ? 'text-gray-200' : 'text-gray-500'}">${prospect.title}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="event.stopPropagation(); removeProspect(${prospect.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        ${activeTarget.id === prospect.id ? '<i class="fas fa-check-circle"></i>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectProspect(id) {
+            const prospect = prospects.find(p => p.id === id);
+            if (prospect) {
+                activeTarget = {
+                    id: prospect.id,
+                    full: prospect.name,
+                    first: prospect.name.split(' ')[0] || '',
+                    last: prospect.name.split(' ').slice(1).join(' ') || ''
+                };
+                renderQueue();
+                updateStats();
+                generateEmailsForActive();
+                generatePitch();
+                saveState();
+            }
+        }
+        
+        function removeProspect(id) {
+            prospects = prospects.filter(p => p.id !== id);
+            if (activeTarget.id === id) {
+                activeTarget = { first: "", last: "", full: "" };
+                document.getElementById('emailResults').innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fas fa-search text-5xl mb-3 opacity-30"></i><p>Select a prospect from the queue</p></div>';
+                document.getElementById('pitchOutput').value = '';
+            }
+            renderQueue();
+            updateStats();
+            saveState();
+        }
+        
+        function updateStats() {
+            document.getElementById('statCompany').textContent = document.getElementById('companyInput').value || 'Not set';
+            document.getElementById('statDomain').textContent = document.getElementById('domainInput').value || 'Not set';
+            document.getElementById('statProfiles').textContent = prospects.length;
+            document.getElementById('statName').textContent = activeTarget.full || 'None';
         }
 
-        // --- PITCH GENERATION ---
+        async function verifyEmail(email) {
+            const result = { status: 'unknown', confidence: 0 };
+            try {
+                const domain = email.split('@')[1];
+                const mxResponse = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`);
+                const mxData = await mxResponse.json();
+                
+                if (!mxData.Answer || mxData.Answer.length === 0) {
+                    result.status = 'invalid';
+                    return result;
+                }
+                result.confidence += 40;
+                
+                const rolePrefixes = ['info', 'admin', 'support', 'sales', 'contact', 'hello', 'office'];
+                const localPart = email.split('@')[0].toLowerCase();
+                if (rolePrefixes.includes(localPart)) {
+                    result.status = 'role';
+                    result.confidence = 60;
+                } else {
+                    result.status = 'valid';
+                    result.confidence = 80;
+                }
+                return result;
+            } catch (error) {
+                result.status = 'unknown';
+                return result;
+            }
+        }
+
+        async function generateEmailsForActive() {
+            const domain = document.getElementById('domainInput').value.trim();
+            const first = activeTarget.first?.toLowerCase();
+            const last = activeTarget.last?.toLowerCase();
+            
+            if (!first || !last || !domain) {
+                document.getElementById('emailResults').innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
+                        <p>Please enter company domain and select a prospect</p>
+                    </div>`;
+                return;
+            }
+            
+            const fInitial = first.charAt(0);
+            const patterns = [
+                { format: "first.last", email: `${first}.${last}@${domain}` },
+                { format: "firstlast", email: `${first}${last}@${domain}` },
+                { format: "f.last", email: `${fInitial}.${last}@${domain}` },
+                { format: "first", email: `${first}@${domain}` }
+            ];
+            
+            const container = document.getElementById('emailResults');
+            container.innerHTML = `<div class="text-center py-4"><div class="spinner"></div><p class="text-sm mt-2">Verifying MX Records...</p></div>`;
+            
+            let validEmails = 0;
+            const verifiedResults = [];
+            
+            for (const pattern of patterns) {
+                const result = await verifyEmail(pattern.email);
+                verifiedResults.push({ ...pattern, ...result });
+                if (result.status === 'valid') validEmails++;
+            }
+            
+            document.getElementById('statValid').textContent = validEmails;
+            
+            let resultsHtml = verifiedResults.map(item => `
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border ${item.status === 'valid' ? 'border-green-300 bg-green-50' : item.status === 'invalid' ? 'border-red-300 bg-red-50' : 'border-gray-200'}">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-mono font-bold text-sm">${item.email}</span>
+                            <span class="text-xs px-2 py-0.5 rounded ${item.status === 'valid' ? 'bg-green-100 text-green-700' : item.status === 'invalid' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}">
+                                ${item.status === 'valid' ? '✓ MX ACTIVE' : item.status === 'invalid' ? '✗ DEAD' : '⚠️ CHECK'}
+                            </span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">${item.format} format</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="navigator.clipboard.writeText('${item.email}'); showToast('Copied!')" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-xs">Copy</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            const gatekeepers = ['info', 'contact', 'hello', 'office'];
+            const gatekeeperHtml = `
+                <div class="mt-4 pt-3 border-t">
+                    <h3 class="text-sm font-bold text-gray-600 mb-2">📬 Gatekeeper Emails</h3>
+                    ${gatekeepers.map(g => `
+                        <div class="flex items-center justify-between bg-gray-50 p-2 rounded border mb-1">
+                            <span class="font-mono text-sm">${g}@${domain}</span>
+                            <div class="flex gap-1">
+                                <button onclick="navigator.clipboard.writeText('${g}@${domain}'); showToast('Copied!')" class="bg-gray-200 px-2 py-1 rounded text-xs">Copy</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = resultsHtml + gatekeeperHtml;
+        }
+
         function generatePitch() {
-            const company = document.getElementById('companyInput').value || "[Company Name]";
-            const first = activeTarget.first ? activeTarget.first.charAt(0).toUpperCase() + activeTarget.first.slice(1) : "[Name]";
+            const company = document.getElementById('companyInput').value.trim() || '[Company]';
+            const firstName = activeTarget.first || '[Name]';
+            const pitchType = document.getElementById('pitchType').value;
+            const signOff = `Kind regards,\nLuisa Cioni\nStrategic Growth Manager\nJewels Airport Transfers\n+44 (0)20 3322 7723\nluisa@jewels-airport-transfers.co.uk`;
             
             const subjects = [
                 `Corporate travel solutions for ${company}`,
                 `Streamlining ${company}'s business travel`,
-                `Executive transport synergy - ${company}`
+                `Partnering with ${company} for executive transport`,
+                `${company} | Travel partner inquiry`
             ];
             
-            const pitch = `Subject: ${subjects[currentSubjectIndex % subjects.length]}\n\nDear ${first},\n\nI'm reaching out on behalf of Jewels Airport Transfers. We specialize in providing seamless executive transport for corporate teams across the UK.\n\nI wanted to explore if we could assist ${company} with reliable, stress-free travel logistics.\n\nKind regards,\nLuisa Cioni`;
-
-            document.getElementById('pitchOutput').value = pitch;
-
-            const hasData = (company !== "[Company Name]" && first !== "[Name]");
-            document.getElementById('copyPitchBtn').disabled = !hasData;
-            document.getElementById('copyPitchBtn').classList.toggle('opacity-50', !hasData);
+            const subject = subjects[currentSubjectIndex % subjects.length];
+            const capFirst = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+            
+            let body = '';
+            if (pitchType === 'direct') {
+                body = `Dear ${capFirst},\n\nI hope this message finds you well.\n\nI'm reaching out on behalf of Jewels Airport Transfers. We specialize in providing reliable, stress-free airport and seaport transfers for corporate teams across the UK.\n\nOur services include:\n- Nationwide coverage\n- Executive and standard vehicles\n- Professional, fully licensed drivers\n- Transparent pre-booked pricing\n\nWe offer a discount on first bookings with code TRIALRIDE10.\n\nI'd be happy to connect if this is of interest.\n\n${signOff}`;
+            } else {
+                body = `Good morning,\n\nCould you please forward this to your Office Manager, Facilities Manager, or the person who handles corporate travel for ${company}?\n\nI'm reaching out on behalf of Jewels Airport Transfers, a local, pre-booked executive transport fleet, and would like to introduce our corporate services.\n\nThank you for your help.\n\n${signOff}`;
+            }
+            
+            document.getElementById('pitchOutput').value = `Subject: ${subject}\n\n${body}`;
+            
+            const copyBtn = document.getElementById('copyPitchBtn');
+            const sendBtn = document.getElementById('sendEmailBtn');
+            if (activeTarget.full && company !== '[Company]') {
+                copyBtn.disabled = false;
+                sendBtn.disabled = false;
+                copyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                copyBtn.disabled = true;
+                sendBtn.disabled = true;
+                copyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
         }
 
-        function spinSubject() { currentSubjectIndex++; generatePitch(); showToast("Subject Rotated"); }
-        function copyPitch() { navigator.clipboard.writeText(document.getElementById('pitchOutput').value); showToast('Pitch Copied!'); }
+        function spinSubject() { currentSubjectIndex++; generatePitch(); showToast('Subject rotated'); }
         
-        function sendSpecific(emailAddress) {
+        function copyPitch() {
+            navigator.clipboard.writeText(document.getElementById('pitchOutput').value);
+            showToast('Pitch copied!');
+        }
+        
+        function sendEmailNow() {
             const pitch = document.getElementById('pitchOutput').value;
             const lines = pitch.split('\n');
-            const sub = encodeURIComponent(lines[0].replace('Subject: ', ''));
-            const body = encodeURIComponent(lines.slice(2).join('\n'));
+            const subject = lines[0].replace('Subject: ', '');
+            const body = lines.slice(2).join('\n');
             const client = document.getElementById('emailClientPref').value;
             
-            let url = `mailto:${emailAddress}?subject=${sub}&body=${body}`;
-            if(client === 'gmail') url = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailAddress}&su=${sub}&body=${body}`;
-            if(client === 'outlook') url = `https://outlook.live.com/owa/?path=/mail/action/compose&to=${emailAddress}&subject=${sub}&body=${body}`;
+            // For auto mode, we just grab the top valid format generated
+            const firstEmailSpan = document.querySelector('#emailResults .font-mono');
+            const toEmail = firstEmailSpan ? firstEmailSpan.textContent : '';
+            
+            let url = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            if(client === 'gmail') url = `https://mail.google.com/mail/?view=cm&fs=1&to=${toEmail}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            if(client === 'outlook') url = `https://outlook.live.com/owa/?path=/mail/action/compose&to=${toEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             
             window.open(url, client === 'mailto' ? '_top' : '_blank');
+        }
+
+        function exportAllEmails() {
+            const leads = prospects.map(p => ({
+                name: p.name,
+                company: document.getElementById('companyInput').value,
+                domain: document.getElementById('domainInput').value
+            }));
+            
+            const csv = ['Name,Company,Probable Email', ...leads.map(l => {
+                const first = l.name.split(' ')[0].toLowerCase();
+                const last = l.name.split(' ').slice(1).join(' ').toLowerCase();
+                const email = l.domain ? `${first}.${last}@${l.domain}` : '';
+                return `"${l.name}","${l.company}","${email}"`;
+            })].join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `jewels_leads_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported to CSV');
         }
     </script>
 </body>
