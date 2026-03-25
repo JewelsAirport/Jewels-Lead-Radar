@@ -16,6 +16,7 @@
     <style>
         .toast { position: fixed; bottom: 20px; right: 20px; background: #0A192F; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; display: none;}
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .email-row:hover { border-color: #D4AF37; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
@@ -25,24 +26,14 @@
             <div>
                 <h1 class="text-2xl font-bold tracking-wide flex items-center">
                     <i class="fas fa-radar text-gold mr-3"></i>
-                    <span>JEWELS LEAD RADAR <span class="text-[10px] bg-accent px-2 py-0.5 rounded ml-2 uppercase">Chrome Extension Edition</span></span>
+                    <span>JEWELS LEAD RADAR <span class="text-[10px] bg-green-500 px-2 py-0.5 rounded ml-2 uppercase">Zero-Cost Edition</span></span>
                 </h1>
             </div>
             <div class="flex items-center space-x-4">
-                <button onclick="toggleApiSettings()" class="text-gold hover:text-white transition" title="API Settings"><i class="fas fa-cog text-xl"></i></button>
+                <button onclick="clearAll()" class="text-sm text-gray-300 hover:text-white transition"><i class="fas fa-eraser mr-1"></i>Clear Board</button>
             </div>
         </div>
     </header>
-
-    <div id="apiSettings" class="hidden bg-navy text-white p-4 border-b border-gray-700">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex-1 max-w-md">
-                <label class="block text-xs text-gray-400 mb-1">Hunter.io API Key</label>
-                <input type="password" id="hunterApiKey" placeholder="Enter your Hunter.io secret key..." class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-gold outline-none">
-            </div>
-            <button onclick="saveApiKey()" class="bg-gold text-navy font-bold py-2 px-6 rounded text-sm ml-4 hover:bg-yellow-400 transition">Save Configuration</button>
-        </div>
-    </div>
 
     <main class="max-w-7xl mx-auto mt-8 px-6 pb-12 grid grid-cols-1 md:grid-cols-12 gap-8">
         
@@ -51,8 +42,8 @@
             <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                 <h2 class="text-lg font-bold text-navy mb-4"><i class="fas fa-building mr-2"></i>Target Identification</h2>
                 <div class="space-y-4">
-                    <input type="text" id="companyInput" placeholder="Company Name (e.g. NCR)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState()">
-                    <input type="text" id="domainInput" placeholder="Domain (e.g. ncr.com)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState()">
+                    <input type="text" id="companyInput" placeholder="Company Name (e.g. NCR)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState(); updateDashboard();">
+                    <input type="text" id="domainInput" placeholder="Domain (e.g. ncr.com)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState(); updateDashboard();">
                 </div>
             </div>
 
@@ -60,7 +51,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-navy"><i class="fas fa-users text-blue-500 mr-2"></i>Prospect Queue</h2>
                     <button onclick="extractFromLinkedIn()" id="extractBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded transition flex items-center shadow-md">
-                        <i class="fab fa-linkedin mr-2"></i>Auto-Extract Active Tab
+                        <i class="fab fa-linkedin mr-2"></i>Auto-Extract
                     </button>
                 </div>
                 
@@ -78,18 +69,18 @@
             <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-gold">
                 <div class="flex justify-between items-center mb-4 border-b pb-3">
                     <div>
-                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-bullseye mr-2 text-gold"></i>Hunter.io Discovery Engine</h2>
-                        <p class="text-xs text-gray-500 mt-1" id="activeTargetDisplay">Select a prospect from the queue.</p>
+                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-bullseye mr-2 text-gold"></i>Local Probability Engine</h2>
+                        <p class="text-xs text-gray-500 mt-1" id="activeTargetDisplay">Select a prospect to generate emails.</p>
                     </div>
-                    <button onclick="findEmailWithHunter()" id="apiSearchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm flex items-center transition opacity-50 cursor-not-allowed" disabled>
-                        <i class="fas fa-bolt mr-2"></i>Verify & Find Email
+                    <button onclick="pingDomain()" id="pingBtn" class="bg-navy hover:bg-navy-light text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm flex items-center transition opacity-50 cursor-not-allowed" disabled>
+                        <i class="fas fa-server mr-2"></i>Ping Mail Server
                     </button>
                 </div>
                 
-                <div id="emailResultArea" class="py-4">
+                <div id="emailList" class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
                     <div class="text-center text-gray-400 py-6">
-                        <i class="fas fa-shield-alt text-4xl mb-3 opacity-30"></i>
-                        <p class="text-sm">Awaiting API Execution...</p>
+                        <i class="fas fa-fingerprint text-4xl mb-3 opacity-30"></i>
+                        <p class="text-sm">Awaiting prospect and domain data...</p>
                     </div>
                 </div>
             </div>
@@ -115,10 +106,7 @@
                 
                 <div class="mt-4 flex gap-4">
                     <button onclick="copyPitch()" id="copyPitchBtn" disabled class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition opacity-50 cursor-not-allowed">
-                        <i class="fas fa-copy mr-2"></i>Copy
-                    </button>
-                    <button onclick="sendEmailNow()" id="sendEmailBtn" disabled class="flex-1 bg-accent hover:bg-purple-600 text-white font-bold py-3 rounded-lg transition opacity-50 cursor-not-allowed">
-                        <i class="fas fa-paper-plane mr-2"></i>Load into Mail
+                        <i class="fas fa-copy mr-2"></i>Copy Pitch
                     </button>
                 </div>
             </div>
@@ -133,9 +121,6 @@
         let currentSubjectIndex = 0;
 
         window.onload = function() {
-            const savedKey = localStorage.getItem('hunter_api_key');
-            if(savedKey) document.getElementById('hunterApiKey').value = savedKey;
-            
             const savedCompany = localStorage.getItem('target_company');
             const savedDomain = localStorage.getItem('target_domain');
             if(savedCompany) document.getElementById('companyInput').value = savedCompany;
@@ -155,15 +140,16 @@
             setTimeout(() => toast.style.display = 'none', 3000);
         }
 
-        function toggleApiSettings() {
-            document.getElementById('apiSettings').classList.toggle('hidden');
-        }
-
-        function saveApiKey() {
-            const key = document.getElementById('hunterApiKey').value.trim();
-            localStorage.setItem('hunter_api_key', key);
-            showToast("API Key Saved Securely.");
-            toggleApiSettings();
+        function clearAll() {
+            document.getElementById('companyInput').value = '';
+            document.getElementById('domainInput').value = '';
+            prospectQueue = [];
+            activeTarget = { first: "", last: "", full: "" };
+            localStorage.removeItem('prospect_queue');
+            saveState();
+            renderQueue();
+            updateDashboard();
+            showToast("Board Cleared");
         }
 
         function saveState() {
@@ -180,7 +166,7 @@
             chrome.tabs.query({url: "*://*.linkedin.com/*"}, function(tabs) {
                 if(tabs.length === 0) {
                     showToast("No LinkedIn tabs found! Open a search first.");
-                    btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract Active Tab';
+                    btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract';
                     return;
                 }
 
@@ -190,15 +176,15 @@
                     files: ['content.js']
                 }, () => {
                     chrome.tabs.sendMessage(targetTab.id, {action: "scrape_linkedin"}, function(response) {
-                        btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract Active Tab';
+                        btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract';
                         
                         if(response && response.success && response.data.length > 0) {
                             prospectQueue = response.data;
                             localStorage.setItem('prospect_queue', JSON.stringify(prospectQueue));
                             renderQueue();
-                            showToast(`Successfully extracted ${response.data.length} prospects!`);
+                            showToast(`Extracted ${response.data.length} prospects!`);
                         } else {
-                            showToast("Could not find names. Ensure LinkedIn search results are loaded.");
+                            showToast("No names found. Ensure search results are loaded.");
                         }
                     });
                 });
@@ -207,7 +193,10 @@
 
         function renderQueue() {
             const container = document.getElementById('parsedNamesList');
-            if(prospectQueue.length === 0) return;
+            if(prospectQueue.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg"><p class="text-sm">Queue is empty</p></div>`;
+                return;
+            }
 
             container.innerHTML = prospectQueue.map(name => {
                 const isSelected = activeTarget.full === name;
@@ -225,80 +214,97 @@
             activeTarget.first = parts[0] || '';
             activeTarget.last = parts.slice(1).join(' ') || '';
             
-            document.getElementById('activeTargetDisplay').innerHTML = `Target Locked: <strong>${fullName}</strong>`;
-            
-            const apiBtn = document.getElementById('apiSearchBtn');
-            apiBtn.disabled = false;
-            apiBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('activeTargetDisplay').innerHTML = `Target: <strong>${fullName}</strong>`;
             
             renderQueue();
-            generatePitch();
-            document.getElementById('emailResultArea').innerHTML = `
-                <div class="text-center text-gray-400 py-6">
-                    <i class="fas fa-fingerprint text-4xl mb-3 opacity-30"></i>
-                    <p class="text-sm">Ready to query Hunter.io for ${activeTarget.first}...</p>
-                </div>`;
+            updateDashboard();
         }
 
-        // --- HUNTER.IO API ---
-        async function findEmailWithHunter() {
-            const apiKey = localStorage.getItem('hunter_api_key');
-            if(!apiKey) {
-                showToast("Please enter your Hunter API Key in settings.");
-                toggleApiSettings();
-                return;
-            }
+        // --- LOCAL GENERATOR & DNS CHECK (FREE) ---
+        function updateDashboard() {
+            const domain = document.getElementById('domainInput').value.trim().toLowerCase().replace('@', '');
+            const first = activeTarget.first.toLowerCase();
+            const last = activeTarget.last.toLowerCase();
+            const emailList = document.getElementById('emailList');
+            const pingBtn = document.getElementById('pingBtn');
 
+            if (first && last && domain) {
+                pingBtn.disabled = false;
+                pingBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                const perms = [
+                    { format: "Standard Corporate", email: `${first}.${last}@${domain}` },
+                    { format: "Initial + Last", email: `${first.charAt(0)}${last}@${domain}` },
+                    { format: "First Only", email: `${first}@${domain}` },
+                    { format: "First + Last", email: `${first}${last}@${domain}` }
+                ];
+
+                let html = perms.map(item => `
+                    <div class="email-row flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 transition mb-2 shadow-sm">
+                        <div class="flex flex-col">
+                            <span class="font-mono text-navy font-bold text-sm">${item.email}</span>
+                            <span class="text-[10px] text-gray-500 font-bold tracking-wider">${item.format}</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="navigator.clipboard.writeText('${item.email}'); showToast('Copied!')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1.5 px-3 rounded text-xs transition">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button onclick="sendSpecific('${item.email}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded text-xs transition">
+                                <i class="fas fa-paper-plane mr-1"></i>Email
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add Trojan / Gatekeeper Emails
+                html += `
+                <div class="mt-4 pt-3 border-t border-gray-200">
+                    <p class="text-xs font-bold text-gray-500 uppercase mb-2"><i class="fas fa-door-open mr-1"></i>Gatekeeper / General Inboxes</p>
+                    ${['info', 'office', 'hello'].map(prefix => `
+                        <div class="email-row flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100 mb-1">
+                            <span class="font-mono text-navy font-bold text-sm">${prefix}@${domain}</span>
+                            <button onclick="sendSpecific('${prefix}@${domain}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    `).join('')}
+                </div>`;
+
+                emailList.innerHTML = html;
+            } else {
+                pingBtn.disabled = true;
+                pingBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                emailList.innerHTML = `<div class="text-center py-6 text-gray-400"><p class="text-sm">Awaiting prospect name and domain...</p></div>`;
+            }
+        }
+
+        async function pingDomain() {
             const domain = document.getElementById('domainInput').value.trim();
-            if(!domain || !activeTarget.first) {
-                showToast("Domain and Target Prospect are required.");
-                return;
-            }
-
-            const btn = document.getElementById('apiSearchBtn');
-            const resultArea = document.getElementById('emailResultArea');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Querying API...';
+            const btn = document.getElementById('pingBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Pinging...';
             
-            const endpoint = `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(activeTarget.first)}&last_name=${encodeURIComponent(activeTarget.last)}&api_key=${apiKey}`;
-
             try {
-                const response = await fetch(endpoint);
+                // Free Google DNS API to check if Mail Exchange (MX) records exist
+                const response = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`);
                 const data = await response.json();
 
-                if (data.data && data.data.email) {
-                    const email = data.data.email;
-                    const score = data.data.score;
-                    const statusColor = score >= 80 ? 'text-green-500' : 'text-yellow-500';
-
-                    resultArea.innerHTML = `
-                        <div class="bg-green-50 border-2 border-green-500 rounded-lg p-5">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i>Verified & Deliverable</p>
-                                    <p class="text-2xl font-mono font-black text-navy" id="foundEmailAddress">${email}</p>
-                                    <p class="text-xs text-gray-500 mt-2">Hunter.io Confidence Score: <strong class="${statusColor}">${score}%</strong></p>
-                                </div>
-                                <button onclick="navigator.clipboard.writeText('${email}'); showToast('Email Copied!')" class="bg-navy text-white px-4 py-2 rounded font-bold hover:bg-gold transition shadow">
-                                    Copy
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    showToast("Email successfully verified!");
+                if (data.Answer && data.Answer.length > 0) {
+                    btn.classList.replace('bg-navy', 'bg-green-500');
+                    btn.classList.replace('hover:bg-navy-light', 'hover:bg-green-600');
+                    btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Server Active';
+                    showToast(`The mail server for ${domain} is live and accepting mail.`);
                 } else {
-                    resultArea.innerHTML = `
-                        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-5 text-center">
-                            <i class="fas fa-exclamation-triangle text-red-500 text-2xl mb-2"></i>
-                            <p class="font-bold text-red-800">No verifiable email found.</p>
-                            <p class="text-xs text-red-600 mt-1">Hunter.io could not find a confident match for ${activeTarget.first} at ${domain}.</p>
-                        </div>
-                    `;
+                    btn.classList.replace('bg-navy', 'bg-red-500');
+                    btn.classList.replace('hover:bg-navy-light', 'hover:bg-red-600');
+                    btn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Server Dead';
+                    showToast(`Warning: No mail server found for ${domain}.`, false);
                 }
             } catch (error) {
-                resultArea.innerHTML = `<p class="text-red-500 text-sm text-center font-bold">API Connection Error. Check your API key or internet connection.</p>`;
-            } finally {
-                btn.innerHTML = '<i class="fas fa-bolt mr-2"></i>Verify & Find Email';
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error';
             }
+
+            setTimeout(() => {
+                btn.className = "bg-navy hover:bg-navy-light text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm flex items-center transition";
+                btn.innerHTML = '<i class="fas fa-server mr-2"></i>Ping Mail Server';
+            }, 4000);
         }
 
         // --- PITCH GENERATION ---
@@ -319,26 +325,21 @@
             const hasData = (company !== "[Company Name]" && first !== "[Name]");
             document.getElementById('copyPitchBtn').disabled = !hasData;
             document.getElementById('copyPitchBtn').classList.toggle('opacity-50', !hasData);
-            document.getElementById('sendEmailBtn').disabled = !hasData;
-            document.getElementById('sendEmailBtn').classList.toggle('opacity-50', !hasData);
         }
 
         function spinSubject() { currentSubjectIndex++; generatePitch(); showToast("Subject Rotated"); }
         function copyPitch() { navigator.clipboard.writeText(document.getElementById('pitchOutput').value); showToast('Pitch Copied!'); }
         
-        function sendEmailNow() {
+        function sendSpecific(emailAddress) {
             const pitch = document.getElementById('pitchOutput').value;
             const lines = pitch.split('\n');
             const sub = encodeURIComponent(lines[0].replace('Subject: ', ''));
             const body = encodeURIComponent(lines.slice(2).join('\n'));
             const client = document.getElementById('emailClientPref').value;
             
-            const emailEl = document.getElementById('foundEmailAddress');
-            const to = emailEl ? emailEl.innerText : '';
-            
-            let url = `mailto:${to}?subject=${sub}&body=${body}`;
-            if(client === 'gmail') url = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${sub}&body=${body}`;
-            if(client === 'outlook') url = `https://outlook.live.com/owa/?path=/mail/action/compose&to=${to}&subject=${sub}&body=${body}`;
+            let url = `mailto:${emailAddress}?subject=${sub}&body=${body}`;
+            if(client === 'gmail') url = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailAddress}&su=${sub}&body=${body}`;
+            if(client === 'outlook') url = `https://outlook.live.com/owa/?path=/mail/action/compose&to=${emailAddress}&subject=${sub}&body=${body}`;
             
             window.open(url, client === 'mailto' ? '_top' : '_blank');
         }
