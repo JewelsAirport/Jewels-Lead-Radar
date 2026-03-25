@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jewels Lead Radar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { navy: '#0A192F', gold: '#D4AF37', accent: '#8B5CF6' } }
+            }
+        }
+    </script>
+    <style>
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #0A192F; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; display: none;}
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <header class="bg-navy text-white px-8 py-5 border-b-4 border-gold shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-wide flex items-center">
+                    <i class="fas fa-radar text-gold mr-3"></i>
+                    <span>JEWELS LEAD RADAR <span class="text-[10px] bg-accent px-2 py-0.5 rounded ml-2 uppercase">Chrome Extension Edition</span></span>
+                </h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleApiSettings()" class="text-gold hover:text-white transition" title="API Settings"><i class="fas fa-cog text-xl"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <div id="apiSettings" class="hidden bg-navy text-white p-4 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex-1 max-w-md">
+                <label class="block text-xs text-gray-400 mb-1">Hunter.io API Key</label>
+                <input type="password" id="hunterApiKey" placeholder="Enter your Hunter.io secret key..." class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-gold outline-none">
+            </div>
+            <button onclick="saveApiKey()" class="bg-gold text-navy font-bold py-2 px-6 rounded text-sm ml-4 hover:bg-yellow-400 transition">Save Configuration</button>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto mt-8 px-6 pb-12 grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        <div class="md:col-span-5 space-y-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <h2 class="text-lg font-bold text-navy mb-4"><i class="fas fa-building mr-2"></i>Target Identification</h2>
+                <div class="space-y-4">
+                    <input type="text" id="companyInput" placeholder="Company Name (e.g. NCR)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState()">
+                    <input type="text" id="domainInput" placeholder="Domain (e.g. ncr.com)" class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-gold outline-none" oninput="saveState()">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-l-blue-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-navy"><i class="fas fa-users text-blue-500 mr-2"></i>Prospect Queue</h2>
+                    <button onclick="extractFromLinkedIn()" id="extractBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded transition flex items-center shadow-md">
+                        <i class="fab fa-linkedin mr-2"></i>Auto-Extract Active Tab
+                    </button>
+                </div>
+                
+                <div id="parsedNamesList" class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    <div class="text-center py-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+                        <i class="fas fa-satellite-dish text-3xl mb-2 opacity-50"></i>
+                        <p class="text-sm">Run a LinkedIn search, then click Auto-Extract.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-7 space-y-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-gold">
+                <div class="flex justify-between items-center mb-4 border-b pb-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-bullseye mr-2 text-gold"></i>Hunter.io Discovery Engine</h2>
+                        <p class="text-xs text-gray-500 mt-1" id="activeTargetDisplay">Select a prospect from the queue.</p>
+                    </div>
+                    <button onclick="findEmailWithHunter()" id="apiSearchBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow-sm flex items-center transition opacity-50 cursor-not-allowed" disabled>
+                        <i class="fas fa-bolt mr-2"></i>Verify & Find Email
+                    </button>
+                </div>
+                
+                <div id="emailResultArea" class="py-4">
+                    <div class="text-center text-gray-400 py-6">
+                        <i class="fas fa-shield-alt text-4xl mb-3 opacity-30"></i>
+                        <p class="text-sm">Awaiting API Execution...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 border-l-4 border-l-accent">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b">
+                    <div>
+                        <h2 class="text-lg font-bold text-navy"><i class="fas fa-pen mr-2 text-accent"></i>Dynamic Pitch Engine</h2>
+                    </div>
+                    <div class="mt-3 md:mt-0 flex gap-2">
+                        <button onclick="spinSubject()" class="border-2 border-gold text-gold hover:bg-gold hover:text-navy rounded-lg p-2 text-sm font-bold transition">
+                            <i class="fas fa-sync-alt mr-1"></i>Spin
+                        </button>
+                        <select id="emailClientPref" class="bg-white border border-gray-300 rounded text-sm font-semibold p-2 focus:border-accent">
+                            <option value="mailto">Desktop Client</option>
+                            <option value="gmail">Gmail</option>
+                            <option value="outlook">Outlook</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <textarea id="pitchOutput" rows="8" class="w-full border-2 border-gray-200 rounded-lg p-4 text-sm font-sans text-gray-800 focus:border-accent focus:outline-none resize-y bg-gray-50 leading-relaxed" readonly placeholder="Awaiting prospect data..."></textarea>
+                
+                <div class="mt-4 flex gap-4">
+                    <button onclick="copyPitch()" id="copyPitchBtn" disabled class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition opacity-50 cursor-not-allowed">
+                        <i class="fas fa-copy mr-2"></i>Copy
+                    </button>
+                    <button onclick="sendEmailNow()" id="sendEmailBtn" disabled class="flex-1 bg-accent hover:bg-purple-600 text-white font-bold py-3 rounded-lg transition opacity-50 cursor-not-allowed">
+                        <i class="fas fa-paper-plane mr-2"></i>Load into Mail
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast"><i class="fas fa-info-circle mr-2"></i><span id="toastMsg"></span></div>
+
+    <script>
+        let activeTarget = { first: "", last: "", full: "" };
+        let prospectQueue = [];
+        let currentSubjectIndex = 0;
+
+        window.onload = function() {
+            const savedKey = localStorage.getItem('hunter_api_key');
+            if(savedKey) document.getElementById('hunterApiKey').value = savedKey;
+            
+            const savedCompany = localStorage.getItem('target_company');
+            const savedDomain = localStorage.getItem('target_domain');
+            if(savedCompany) document.getElementById('companyInput').value = savedCompany;
+            if(savedDomain) document.getElementById('domainInput').value = savedDomain;
+
+            const savedQueue = localStorage.getItem('prospect_queue');
+            if(savedQueue) {
+                prospectQueue = JSON.parse(savedQueue);
+                renderQueue();
+            }
+        };
+
+        function showToast(msg) {
+            document.getElementById('toastMsg').innerText = msg;
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        function toggleApiSettings() {
+            document.getElementById('apiSettings').classList.toggle('hidden');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('hunterApiKey').value.trim();
+            localStorage.setItem('hunter_api_key', key);
+            showToast("API Key Saved Securely.");
+            toggleApiSettings();
+        }
+
+        function saveState() {
+            localStorage.setItem('target_company', document.getElementById('companyInput').value);
+            localStorage.setItem('target_domain', document.getElementById('domainInput').value);
+            generatePitch();
+        }
+
+        // --- LINKEDIN EXTRACTION ---
+        function extractFromLinkedIn() {
+            const btn = document.getElementById('extractBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Extracting...';
+
+            chrome.tabs.query({url: "*://*.linkedin.com/*"}, function(tabs) {
+                if(tabs.length === 0) {
+                    showToast("No LinkedIn tabs found! Open a search first.");
+                    btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract Active Tab';
+                    return;
+                }
+
+                const targetTab = tabs[0];
+                chrome.scripting.executeScript({
+                    target: {tabId: targetTab.id},
+                    files: ['content.js']
+                }, () => {
+                    chrome.tabs.sendMessage(targetTab.id, {action: "scrape_linkedin"}, function(response) {
+                        btn.innerHTML = '<i class="fab fa-linkedin mr-2"></i>Auto-Extract Active Tab';
+                        
+                        if(response && response.success && response.data.length > 0) {
+                            prospectQueue = response.data;
+                            localStorage.setItem('prospect_queue', JSON.stringify(prospectQueue));
+                            renderQueue();
+                            showToast(`Successfully extracted ${response.data.length} prospects!`);
+                        } else {
+                            showToast("Could not find names. Ensure LinkedIn search results are loaded.");
+                        }
+                    });
+                });
+            });
+        }
+
+        function renderQueue() {
+            const container = document.getElementById('parsedNamesList');
+            if(prospectQueue.length === 0) return;
+
+            container.innerHTML = prospectQueue.map(name => {
+                const isSelected = activeTarget.full === name;
+                return `
+                    <div class="p-3 rounded border transition flex justify-between items-center cursor-pointer ${isSelected ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-50 border-gray-200 hover:border-blue-300 text-navy'}" onclick="selectProspect('${name.replace(/'/g, "\\'")}')">
+                        <div class="font-bold text-sm">${name}</div>
+                        ${isSelected ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-chevron-right text-xs"></i>'}
+                    </div>`;
+            }).join('');
+        }
+
+        function selectProspect(fullName) {
+            activeTarget.full = fullName;
+            const parts = fullName.split(' ').filter(p => p.trim() !== '');
+            activeTarget.first = parts[0] || '';
+            activeTarget.last = parts.slice(1).join(' ') || '';
+            
+            document.getElementById('activeTargetDisplay').innerHTML = `Target Locked: <strong>${fullName}</strong>`;
+            
+            const apiBtn = document.getElementById('apiSearchBtn');
+            apiBtn.disabled = false;
+            apiBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            renderQueue();
+            generatePitch();
+            document.getElementById('emailResultArea').innerHTML = `
+                <div class="text-center text-gray-400 py-6">
+                    <i class="fas fa-fingerprint text-4xl mb-3 opacity-30"></i>
+                    <p class="text-sm">Ready to query Hunter.io for ${activeTarget.first}...</p>
+                </div>`;
+        }
+
+        // --- HUNTER.IO API ---
+        async function findEmailWithHunter() {
+            const apiKey = localStorage.getItem('hunter_api_key');
+            if(!apiKey) {
+                showToast("Please enter your Hunter API Key in settings.");
+                toggleApiSettings();
+                return;
+            }
+
+            const domain = document.getElementById('domainInput').value.trim();
+            if(!domain || !activeTarget.first) {
+                showToast("Domain and Target Prospect are required.");
+                return;
+            }
+
+            const btn = document.getElementById('apiSearchBtn');
+            const resultArea = document.getElementById('emailResultArea');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Querying API...';
+            
+            const endpoint = `https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(activeTarget.first)}&last_name=${encodeURIComponent(activeTarget.last)}&api_key=${apiKey}`;
+
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+
+                if (data.data && data.data.email) {
+                    const email = data.data.email;
+                    const score = data.data.score;
+                    const statusColor = score >= 80 ? 'text-green-500' : 'text-yellow-500';
+
+                    resultArea.innerHTML = `
+                        <div class="bg-green-50 border-2 border-green-500 rounded-lg p-5">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i>Verified & Deliverable</p>
+                                    <p class="text-2xl font-mono font-black text-navy" id="foundEmailAddress">${email}</p>
+                                    <p class="text-xs text-gray-500 mt-2">Hunter.io Confidence Score: <strong class="${statusColor}">${score}%</strong></p>
+                                </div>
+                                <button onclick="navigator.clipboard.writeText('${email}'); showToast('Email Copied!')" class="bg-navy text-white px-4 py-2 rounded font-bold hover:bg-gold transition shadow">
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    showToast("Email successfully verified!");
+                } else {
+                    resultArea.innerHTML = `
+                        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-5 text-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-2xl mb-2"></i>
+                            <p class="font-bold text-red-800">No verifiable email found.</p>
+                            <p class="text-xs text-red-600 mt-1">Hunter.io could not find a confident match for ${activeTarget.first} at ${domain}.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultArea.innerHTML = `<p class="text-red-500 text-sm text-center font-bold">API Connection Error. Check your API key or internet connection.</p>`;
+            } finally {
+                btn.innerHTML = '<i class="fas fa-bolt mr-2"></i>Verify & Find Email';
+            }
+        }
+
+        // --- PITCH GENERATION ---
+        function generatePitch() {
+            const company = document.getElementById('companyInput').value || "[Company Name]";
+            const first = activeTarget.first ? activeTarget.first.charAt(0).toUpperCase() + activeTarget.first.slice(1) : "[Name]";
+            
+            const subjects = [
+                `Corporate travel solutions for ${company}`,
+                `Streamlining ${company}'s business travel`,
+                `Executive transport synergy - ${company}`
+            ];
+            
+            const pitch = `Subject: ${subjects[currentSubjectIndex % subjects.length]}\n\nDear ${first},\n\nI'm reaching out on behalf of Jewels Airport Transfers. We specialize in providing seamless executive transport for corporate teams across the UK.\n\nI wanted to explore if we could assist ${company} with reliable, stress-free travel logistics.\n\nKind regards,\nLuisa Cioni`;
+
+            document.getElementById('pitchOutput').value = pitch;
+
+            const hasData = (company !== "[Company Name]" && first !== "[Name]");
+            document.getElementById('copyPitchBtn').disabled = !hasData;
+            document.getElementById('copyPitchBtn').classList.toggle('opacity-50', !hasData);
+            document.getElementById('sendEmailBtn').disabled = !hasData;
+            document.getElementById('sendEmailBtn').classList.toggle('opacity-50', !hasData);
+        }
+
+        function spinSubject() { currentSubjectIndex++; generatePitch(); showToast("Subject Rotated"); }
+        function copyPitch() { navigator.clipboard.writeText(document.getElementById('pitchOutput').value); showToast('Pitch Copied!'); }
+        
+        function sendEmailNow() {
+            const pitch = document.getElementById('pitchOutput').value;
+            const lines = pitch.split('\n');
+            const sub = encodeURIComponent(lines[0].replace('Subject: ', ''));
+            const body = encodeURIComponent(lines.slice(2).join('\n'));
+            const client = document.getElementById('emailClientPref').value;
+            
+            const emailEl = document.getElementById('foundEmailAddress');
+            const to = emailEl ? emailEl.innerText : '';
+            
+            let url = `mailto:${to}?subject=${sub}&body=${body}`;
+            if(client === 'gmail') url = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${sub}&body=${body}`;
+            if(client === 'outlook') url = `https://outlook.live.com/owa/?path=/mail/action/compose&to=${to}&subject=${sub}&body=${body}`;
+            
+            window.open(url, client === 'mailto' ? '_top' : '_blank');
+        }
+    </script>
+</body>
+</html>
