@@ -6,7 +6,7 @@
   "permissions": ["tabs", "scripting", "storage"],
   "host_permissions": [
     "*://*.linkedin.com/*",
-    "https://api.hunter.io/*"
+    "*://*.google.com/*"
   ],
   "action": {
     "default_title": "Open Jewels Lead Radar"
